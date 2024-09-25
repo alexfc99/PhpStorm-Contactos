@@ -40,21 +40,9 @@ public function ficha_contacto(int $codigo): Response{
     #[Route('/contacto/buscar/{texto}', name: 'buscar_contacto')]
     public function buscar_contacto(string $texto): Response{
         $resultados = array_filter($this->contactos, function($contacto) use ($texto){
-            return strpos($contacto["nombre"], $texto) !== FALSE;
-        });
-        if (count($resultados)) {
-            $html = "<ul>";
-            foreach ($resultados as $id => $resultado) {
-                $html .= "<li>" . $id . "</li>";
-                $html .= "<li>" . $resultado["nombre"] . "</li>";
-                $html .= "<li>" . $resultado["telefono"] . "</li>";
-                $html .= "<li>" . $resultado["email"] . "</li>";
-            }
-            $html .= "</ul>";
-            return new Response("<html><body>$html</body>");
-        }
-        return new Response("<html><body>No se ha encontrado ningún contacto </body>");
+            return strpos($contacto["nombre"],$texto) !== false;
     }
-
-
+    );
+        return $this->render('lista_contactos.html.twig', ['contactos' => $resultados]);
+    }
 }
