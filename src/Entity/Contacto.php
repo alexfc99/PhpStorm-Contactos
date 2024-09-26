@@ -22,6 +22,14 @@ class Contacto
     #[ORM\Column(length: 255)]
     private ?string $email = null;
 
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Provincia $provincia = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Provincia $provincia_id = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -59,6 +67,30 @@ class Contacto
     public function setEmail(string $email): static
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function getProvincia(): ?Provincia
+    {
+        return $this->provincia;
+    }
+
+    public function setProvincia(?Provincia $provincia): static
+    {
+        $this->provincia = $provincia;
+
+        return $this;
+    }
+
+    public function getProvinciaId(): ?Provincia
+    {
+        return $this->provincia_id;
+    }
+
+    public function setProvinciaId(?Provincia $provincia_id): static
+    {
+        $this->provincia_ = $provincia_id;
 
         return $this;
     }

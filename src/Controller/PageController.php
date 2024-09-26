@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Contacto;
+use App\Entity\Provincia;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -11,11 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class PageController extends AbstractController
 {
     private $contactos = [
-        1 => ["nombre" => "Juan Pérez", "telefono" => "524142432", "email" => "juanp@ieselcaminas.org"],
-        2 => ["nombre" => "Ana López", "telefono" => "58958448", "email" => "anita@ieselcaminas.org"],
-        5 => ["nombre" => "Mario Montero", "telefono" => "5326824", "email" => "mario.mont@ieselcaminas.org"],
-        7 => ["nombre" => "Laura Martínez", "telefono" => "42898966", "email" => "lm2000@ieselcaminas.org"],
-        9 => ["nombre" => "Nora Jover", "telefono" => "54565859", "email" => "norajover@ieselcaminas.org"]
+
     ];
 
     #[Route('/page', name: 'app_page')]
@@ -30,15 +27,16 @@ class PageController extends AbstractController
         return $this->render('inicio.html.twig');
     }
     #[Route('/contacto/insertar', name: 'insertar_contacto')]
-    public function insertaro(ManagerRegistry $doctrine){
+    public function insertar(ManagerRegistry $doctrine){
         $entityManager = $doctrine->getManager();
-        foreach ($this->contactos as $c) {
+
             $contacto = new Contacto();
-            $contacto->setNombre($c["nombre"]);
-            $contacto->setTelefono($c["telefono"]);
-            $contacto->setEmail($c["email"]);
+            $contacto->setNombre("Alex");
+            $contacto->setTelefono("610803928");
+            $contacto->setEmail("alex@gmail.com");
+            $contacto->setProvinciaId("0");
             $entityManager->persist($contacto);
-        }
+            $entityManager->flush();
         try {
             $entityManager->flush();
             return new Response("Contactos insertados");
@@ -63,6 +61,59 @@ public function ficha_contacto(ManagerRegistry$doctrine, $codigo): Response{
         $contactos = $repositorio->findByName($texto);
 
         return $this->render('lista_contactos.html.twig', ['contactos' => $contactos]);
+    }
+    #[Route('/contacto/update/{id}/{nombre}', name: 'modificar_contacto')]
+    public function update(ManagerRegistry $doctrine, $id, $nombre): Response{
+        $entityManager = $doctrine->getManager();
+        $repositorio = $doctrine->getRepository(Contacto::class);
+        $contacto = $repositorio->find($id);
+        if($contacto){
+            $contacto->setNombre($nombre);
+            try {
+                $entityManager->flush();
+                return $this->render('ficha_contacto.html.twig', ["contacto"=> $contacto]);
+            }catch (\Exception $e){
+                return new Response("Error insertando objetos");
+            }
+        }else
+            return $this->render('ficha_contacto.html.twig', ["contacto"=> null]);
+    }
+
+    #[Route('/contacto/delete/{id}', name: 'eliminar_contacto')]
+    public function delete(ManagerRegistry $doctrine, $id): Response{
+        $entityManager = $doctrine->getManager();
+        $repositorio = $doctrine->getRepository(Contacto::class);
+        $contacto = $repositorio->find($id);
+        if($contacto){
+            try {
+                $entityManager->remove($contacto);
+                $entityManager->flush();
+                return new Response("Contacto eliminado");
+            }catch (\Exception $e){
+                return new Response("Error eliminando objeto");
+            }
+        }else
+            return $this->render('ficha_contacto.html.twig', ["contacto"=> null]);
+    }
+
+    #[Route('/contacto/insertarConProvincia',name: 'insertar_contacto_provincia')]
+    public function insertar_provincia(ManagerRegistry $doctrine): Response{
+        $entityManager = $doctrine->getManager();
+        $provincia = new Provincia();
+
+        $provincia->setNombre("Alicante");
+        $contacto = new Contacto();
+
+        $contacto->setNombre("Alex");
+        $contacto->setTelefono("610803928");
+        $contacto->setEmail("alex@gmail.com");
+        $contacto->setProvincia($provincia);
+
+        $entityManager->persist($provincia);
+        $entityManager->persist($contacto);
+
+        $entityManager->flush();
+        return $this->render('ficha_contacto.html.twig', ["contacto"=> $contacto]);
     }
 
 }
