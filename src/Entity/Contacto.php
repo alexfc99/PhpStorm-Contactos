@@ -26,9 +26,6 @@ class Contacto
     #[ORM\JoinColumn(nullable: false)]
     private ?Provincia $provincia = null;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Provincia $provincia_id = null;
 
     public function getId(): ?int
     {
@@ -83,15 +80,5 @@ class Contacto
         return $this;
     }
 
-    public function getProvinciaId(): ?Provincia
-    {
-        return $this->provincia_id;
-    }
 
-    public function setProvinciaId(?Provincia $provincia_id): static
-    {
-        $this->provincia_ = $provincia_id;
-
-        return $this;
-    }
 }

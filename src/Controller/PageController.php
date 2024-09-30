@@ -11,9 +11,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class PageController extends AbstractController
 {
-    private $contactos = [
 
-    ];
 
     #[Route('/page', name: 'app_page')]
     public function index(): Response
@@ -26,15 +24,18 @@ class PageController extends AbstractController
     public function inicio(): Response{
         return $this->render('inicio.html.twig');
     }
-    #[Route('/contacto/insertar', name: 'insertar_contacto')]
+    #[Route('/contacto/insertar/nuevoContacto', name: 'insertar_contacto')]
     public function insertar(ManagerRegistry $doctrine){
         $entityManager = $doctrine->getManager();
+        $repositorio = $doctrine->getRepository(Provincia::class);
+
+        $provincia = $repositorio->findOneBy(["nombre" => "Alicante"]);
 
             $contacto = new Contacto();
-            $contacto->setNombre("Alex");
-            $contacto->setTelefono("610803928");
-            $contacto->setEmail("alex@gmail.com");
-            $contacto->setProvinciaId("0");
+            $contacto->setNombre("Paco");
+            $contacto->setTelefono("629111833");
+            $contacto->setEmail("paco@gmail.com");
+            $contacto->setProvincia($provincia);
             $entityManager->persist($contacto);
             $entityManager->flush();
         try {
@@ -96,12 +97,12 @@ public function ficha_contacto(ManagerRegistry$doctrine, $codigo): Response{
             return $this->render('ficha_contacto.html.twig', ["contacto"=> null]);
     }
 
-    #[Route('/contacto/insertarConProvincia',name: 'insertar_contacto_provincia')]
+    #[Route('/contacto/provincia/insertarConProvincia',name: 'insertar_contacto_provincia')]
     public function insertar_provincia(ManagerRegistry $doctrine): Response{
         $entityManager = $doctrine->getManager();
         $provincia = new Provincia();
 
-        $provincia->setNombre("Alicante");
+        $provincia->setNombre("Castellón");
         $contacto = new Contacto();
 
         $contacto->setNombre("Alex");
@@ -110,6 +111,25 @@ public function ficha_contacto(ManagerRegistry$doctrine, $codigo): Response{
         $contacto->setProvincia($provincia);
 
         $entityManager->persist($provincia);
+        $entityManager->persist($contacto);
+
+        $entityManager->flush();
+        return $this->render('ficha_contacto.html.twig', ["contacto"=> $contacto]);
+    }
+    #[Route('/contacto/provincia/insertarSinProvincia',name: 'insertar_sin_provincia')]
+    public function insertar_sin_provincia(ManagerRegistry $doctrine): Response{
+        $entityManager = $doctrine->getManager();
+        $repositorio = $doctrine->getRepository(Provincia::class);
+
+        $provincia = $repositorio->findOneBy(["nombre" => "Alicante"]);
+
+        $contacto = new Contacto();
+
+        $contacto->setNombre("Juan");
+        $contacto->setTelefono("622938711");
+        $contacto->setEmail("juan@gmail.com");
+        $contacto->setProvincia($provincia);
+
         $entityManager->persist($contacto);
 
         $entityManager->flush();
