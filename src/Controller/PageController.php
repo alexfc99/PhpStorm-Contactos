@@ -4,10 +4,16 @@ namespace App\Controller;
 
 use App\Entity\Contacto;
 use App\Entity\Provincia;
+use App\Form\ContactoType;
 use Doctrine\Persistence\ManagerRegistry;
+use Exception;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 class PageController extends AbstractController
 {
@@ -25,7 +31,8 @@ class PageController extends AbstractController
         return $this->render('inicio.html.twig');
     }
     #[Route('/contacto/insertar/nuevoContacto', name: 'insertar_contacto')]
-    public function insertar(ManagerRegistry $doctrine){
+    public function insertar(ManagerRegistry $doctrine): Response
+    {
         $entityManager = $doctrine->getManager();
         $repositorio = $doctrine->getRepository(Provincia::class);
 
@@ -41,7 +48,7 @@ class PageController extends AbstractController
         try {
             $entityManager->flush();
             return new Response("Contactos insertados");
-        }catch (\Exception $e){
+        }catch (Exception $e){
             return new Response("Error insertando objetos");
         }
     }
@@ -73,7 +80,7 @@ public function ficha_contacto(ManagerRegistry$doctrine, $codigo): Response{
             try {
                 $entityManager->flush();
                 return $this->render('ficha_contacto.html.twig', ["contacto"=> $contacto]);
-            }catch (\Exception $e){
+            }catch (Exception $e){
                 return new Response("Error insertando objetos");
             }
         }else
@@ -90,7 +97,7 @@ public function ficha_contacto(ManagerRegistry$doctrine, $codigo): Response{
                 $entityManager->remove($contacto);
                 $entityManager->flush();
                 return new Response("Contacto eliminado");
-            }catch (\Exception $e){
+            }catch (Exception $e){
                 return new Response("Error eliminando objeto");
             }
         }else
@@ -136,4 +143,49 @@ public function ficha_contacto(ManagerRegistry$doctrine, $codigo): Response{
         return $this->render('ficha_contacto.html.twig', ["contacto"=> $contacto]);
     }
 
+    #[Route('/crearcontacto/nuevo',name: 'nuevo_contacto')]
+    public function nuevo(ManagerRegistry $doctrine, Request $request): Response{
+        $contacto = new Contacto();
+
+        $formulario = $this->createForm(ContactoType::class, $contacto);
+
+            $formulario->handleRequest($request);
+
+            if($formulario->isSubmitted() && $formulario->isValid()){
+                $contacto = $formulario->getData();
+                $entityManager = $doctrine->getManager();
+                $entityManager->persist($contacto);
+                $entityManager->flush();
+                return $this->redirectToRoute('ficha_contacto',['codigo'=>$contacto->getId()]);
+            }
+
+        return $this->render('nuevo.html.twig', array(
+            'formulario' => $formulario->createView()
+        ));
+    }
+
+    #[Route('/contacto/editar/{id}',name: 'editar_contacto')]
+    public function editar(ManagerRegistry $doctrine, Request $request, $id): Response{
+        $repositorio = $doctrine->getRepository(Contacto::class);
+        $contacto = $repositorio->find($id);
+
+        if ($contacto){
+            $formulario = $this->createForm(ContactoType::class, $contacto);
+            $formulario->handleRequest($request);
+            if ($formulario->isSubmitted() && $formulario->isValid()) {
+                $contacto = $formulario->getData();
+                $entityManager = $doctrine->getManager();
+                $entityManager->persist($contacto);
+                $entityManager->flush();
+                return $this->redirectToRoute('ficha_contacto', ["codigo" => $contacto->getId()]);
+            }
+            return $this->render('nuevo.html.twig', array(
+                'formulario' => $formulario->createView()
+            ));
+        }else{
+            return $this->render('ficha_contacto.html.twig', [
+                'contacto' => NULL
+            ]);
+        }
+    }
 }
